@@ -1,0 +1,3 @@
+include 'producer'
+include 'middleman'
+include 'consumer'
