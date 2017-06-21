@@ -1,0 +1,26 @@
+
+spring:
+  application:
+      name: zipkin-server
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka:9092
+          zk-nodes: kafka:2181
+
+  # We don't want to collect spans / traces for the zipkin server itself
+  sleuth:
+    enabled: false
+
+  datasource:
+    schema: classpath:/mysql.sql
+    url: jdbc:mysql://mysqldb:3306/test
+    username: root
+    password: root
+    initialize: true
+    continueOnError: true
+
+zipkin:
+  storage:
+    type: mysql

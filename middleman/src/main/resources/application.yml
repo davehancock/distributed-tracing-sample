@@ -1,5 +1,7 @@
 
 spring:
+  application:
+      name: middleman
   cloud:
     stream:
       kafka:

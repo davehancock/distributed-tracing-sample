@@ -8,18 +8,28 @@ services:
       - "9001:8080"
     depends_on:
       - kafka
+      - middleman
   middleman:
     build: ./middleman
     ports:
       - "9002:8080"
     depends_on:
       - kafka
+      - consumer
   consumer:
     build: ./consumer
     ports:
       - "9003:8080"
     depends_on:
       - kafka
+
+  zipkinserver:
+    build: ./zipkin-server
+    ports:
+      - "9004:8080"
+    depends_on:
+      - kafka
+      - mysqldb
 
   kafka:
     image: spotify/kafka
@@ -28,3 +38,9 @@ services:
     ports:
       - "9092:9092"
       - "2181:2181"
+
+  mysqldb:
+    image: mysql:5.6.35
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=test

@@ -19,13 +19,17 @@ dependencyManagement {
 
 dependencies {
 
-    compile 'org.springframework.boot:spring-boot-actuator'
-
-    compile 'org.springframework.boot:spring-boot-starter-web'
-
-    compile 'org.springframework.cloud:spring-cloud-sleuth-stream'
+    // For consumption of tracing events from kafka
     compile 'org.springframework.cloud:spring-cloud-starter-sleuth'
     compile 'org.springframework.cloud:spring-cloud-stream-binder-kafka'
+    compile 'org.springframework.cloud:spring-cloud-sleuth-zipkin-stream'
+
+    // For the persistence of the spans / traces within mysql
+    compile 'org.springframework.boot:spring-boot-starter-jdbc'
+    compile 'mysql:mysql-connector-java:6.0.5'
+
+    // For exposing the zipkin ui
+    compile 'io.zipkin.java:zipkin-autoconfigure-ui'
 
     testCompile 'junit:junit:4.12'
 }

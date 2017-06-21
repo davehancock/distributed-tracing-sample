@@ -1,3 +1,5 @@
 include 'producer'
 include 'middleman'
 include 'consumer'
+include 'zipkin-server'
+
