@@ -25,7 +25,7 @@ public class ApplicationLoader {
 
         @ServiceActivator(inputChannel = Sink.INPUT)
         public void consumeMessage(Object payload) {
-            LOG.info("[Consumer] Received payload: [{}] ", payload);
+            LOG.info("[consumer-one] Received payload: [{}]", payload);
         }
     }
 

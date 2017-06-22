@@ -1,7 +1,7 @@
 
 spring:
   application:
-      name: consumer
+      name: consumer-two
   cloud:
     stream:
       kafka:

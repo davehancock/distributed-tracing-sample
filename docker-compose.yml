@@ -15,18 +15,31 @@ services:
       - "9002:8080"
     depends_on:
       - kafka
-      - consumer
-  consumer:
-    build: ./consumer
+      - consumer-one
+      - consumer-two
+      - consumer-three
+  consumer-one:
+    build: ./consumer-one
     ports:
       - "9003:8080"
     depends_on:
       - kafka
+  consumer-two:
+    build: ./consumer-two
+    ports:
+      - "9004:8080"
+    depends_on:
+      - kafka
+  consumer-three:
+    build: ./consumer-three
+    ports:
+      - "9005:8080"
+
 
   zipkinserver:
     build: ./zipkin-server
     ports:
-      - "9004:8080"
+      - "9100:8080"
     depends_on:
       - kafka
       - mysqldb

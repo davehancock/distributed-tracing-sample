@@ -27,10 +27,10 @@ public class ApplicationLoader {
 
     /**
      * We explicitly declare this as a Bean to allow Spring to enrich RestTemplate
-     * with a traceRestTemplateInterceptor - {@link TraceWebClientAutoConfiguration}
+     * with a TraceRestTemplateInterceptor - {@link TraceWebClientAutoConfiguration}
      */
     @Bean
-    public RestOperations restTemplate() {
+    public RestOperations restOperations() {
         return new RestTemplate();
     }
 
