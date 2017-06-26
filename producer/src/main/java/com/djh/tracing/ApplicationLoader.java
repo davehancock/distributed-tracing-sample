@@ -48,8 +48,14 @@ public class ApplicationLoader {
 
             String payload = "Payload Contents: " + Math.random();
             LOG.info("[Publisher] Sending message with payload: [{}]", payload);
-            restOperations.put("http://middleman:8080/foo", payload);
+
+            try {
+                restOperations.put("http://middleman:8080/foo", payload);
+            }catch (RuntimeException e){
+                LOG.info("Something happened down stream which im not interested in...");
+            }
         }
+
     }
 
 }
