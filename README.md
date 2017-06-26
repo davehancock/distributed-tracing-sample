@@ -28,9 +28,8 @@ sleuth
 
 Things to add:
 
-- An intermittently failing service (either randomly or on exposed switch)
-- A downstream service of a kafka stream consumer
-- A java non spring service
 - A Go service - using gokit? for tracing
-- A service that adds baggage
+- gliffy diagram
 
+- A service that adds baggage
+- A downstream service of a kafka stream consumer

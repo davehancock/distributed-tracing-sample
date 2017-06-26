@@ -4,23 +4,86 @@ import (
 	"net/http"
 	"fmt"
 	"io/ioutil"
-	"log"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/tracing/opentracing"
+
+	httptransport "github.com/go-kit/kit/transport/http"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	zipkin "github.com/openzipkin/zipkin-go-opentracing"
+	"github.com/go-kit/kit/endpoint"
+	"context"
+	"os"
 )
 
 const port = ":8080"
 
 func main() {
 
-	//configureService()
+	configureService()
 
-	fmt.Println("Starting consumer-three... on port " + port)
+	logger := log.NewLogfmtLogger(os.Stderr)
 
-	http.HandleFunc("/gofoo", handleStuff)
-	err := http.ListenAndServe(port, nil)
+	logger.Log("Starting consumer-three... on port " + port)
+
+	svc := fooService{}
+
+	fooHandler := httptransport.NewServer(
+		makeFooEndpoint(svc),
+		decodeFooRequest,
+		nil,
+		append(options, httptransport.ServerBefore(opentracing.FromHTTPRequest(tracer, "gofoo", logger)))...,
+	)
+
+	http.Handle("/foo", fooHandler)
+	fmt.Println(http.ListenAndServe(":8080", nil))
+}
+
+func decodeFooRequest(_ context.Context, r *http.Request) (interface{}, error) {
+
+	var request fooRequest
+
+	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
+	request = string(payload);
 
+	return request, nil
+}
+
+// Some service definition
+type FooService interface {
+	ConsumeMessage(string) (string, error)
+}
+
+// Some service implementation
+type fooService struct{}
+
+func (fooService) ConsumeMessage(message string) {
+	fmt.Println(message)
+}
+
+// Some Request
+type fooRequest struct {
+	S string
+}
+
+// Some Response
+type fooResponse struct {
+	S string
+}
+
+// Some Endpoint
+func makeFooEndpoint(service FooService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(fooRequest)
+		v, err := service.ConsumeMessage(req.S)
+		if err != nil {
+			return fooResponse{v, err.Error()}, nil
+		}
+		return fooResponse{v, ""}, nil
+	}
 }
 
 func handleStuff(w http.ResponseWriter, r *http.Request) {
@@ -36,43 +99,59 @@ func handleStuff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Print("Gophered - " + string(payload))
+	fmt.Print("Gophered - " + string(payload))
 }
+
+func MakeHTTPHandler(tracer stdopentracing.Tracer, logger log.Logger) http.Handler {
+
+	options := []httptransport.ServerOption{
+		httptransport.ServerErrorLogger(logger),
+	}
+
+	m := http.NewServeMux()
+	m.Handle("/gofoo", httptransport.NewServer(
+		MakeSumEndpoint,
+		DecodeHTTPSumRequest,
+		EncodeHTTPGenericResponse,
+		append(options, httptransport.ServerBefore(opentracing.FromHTTPRequest(tracer, "gofoo", logger)))...,
+	))
+
+	return m
+}
+
 
 
 // Setup / Configuration for the service, i.e Tracing in this case
 
-//func configureService(){
-//
-//	var (
-//		zipkinAddr = flag.String("zipkin.addr", "", "Enable Zipkin tracing via a Zipkin HTTP Collector endpoint")
-//		zipkinKafkaAddr = flag.String("zipkin.kafka.addr", "", "Enable Zipkin tracing via a Kafka server host:port")
-//	)
-//	flag.Parse()
-//
-//	// Tracing domain.
-//	var tracer stdopentracing.Tracer
-//	{
-//		if *zipkinAddr != "" {
-//			logger := log.With(logger, "tracer", "ZipkinHTTP")
-//			logger.Log("addr", *zipkinAddr)
-//
-//			// endpoint typically looks like: http://zipkinhost:9411/api/v1/spans
-//			collector, err := zipkin.NewHTTPCollector(*zipkinAddr)
-//			if err != nil {
-//				logger.Log("err", err)
-//				os.Exit(1)
-//			}
-//			defer collector.Close()
-//
-//			tracer, err = zipkin.NewTracer(
-//				zipkin.NewRecorder(collector, false, "localhost:80", "addsvc"),
-//			)
-//			if err != nil {
-//				logger.Log("err", err)
-//				os.Exit(1)
-//			}
-//		}
-//	}
-//
-//}
+func configureService(logger log.Logger) {
+
+	// Tracing domain.
+	var (
+		debugMode = false
+		serviceName = "consumer-three"
+		serviceHostPort = "localhost:8080"
+		zipkinHTTPEndpoint = "zipkin-server:8080"
+	)
+
+	collector, err := zipkin.NewHTTPCollector(zipkinHTTPEndpoint)
+	if err != nil {
+		logger.Log("Error initializing zipkin collector", err)
+	}
+
+	tracer, err := zipkin.NewTracer(
+		zipkin.NewRecorder(collector, debugMode, serviceHostPort, serviceName),
+	)
+	if err != nil {
+		logger.Log("Error initializing zipkin recorder", err)
+	}
+
+	// HTTP transport.
+	go func() {
+		logger := log.With(logger, "transport", "HTTP")
+		h := MakeHTTPHandler(endpoints, tracer, logger)
+		logger.Log("addr", *httpAddr)
+		errc <- http.ListenAndServe(*httpAddr, h)
+	}()
+
+}
+
