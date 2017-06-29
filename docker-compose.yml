@@ -2,38 +2,38 @@ version: '3'
 
 services:
 
-  producer:
-    build: ./producer
-    ports:
-      - "9001:8080"
-    depends_on:
-      - kafka
-      - middleman
-  middleman:
-    build: ./middleman
-    ports:
-      - "9002:8080"
-    depends_on:
-      - kafka
-      - consumer-one
-      - consumer-two
-      - consumer-three
-  consumer-one:
-    build: ./consumer-one
-    ports:
-      - "9003:8080"
-    depends_on:
-      - kafka
-  consumer-two:
-    build: ./consumer-two
-    ports:
-      - "9004:8080"
-    depends_on:
-      - kafka
-  consumer-three:
-    build: ./consumer-three
-    ports:
-      - "9005:8080"
+#  producer:
+#    build: ./producer
+#    ports:
+#      - "9001:8080"
+#    depends_on:
+#      - kafka
+#      - middleman
+#  middleman:
+#    build: ./middleman
+#    ports:
+#      - "9002:8080"
+#    depends_on:
+#      - kafka
+#      - consumer-one
+#      - consumer-two
+#      - consumer-three
+#  consumer-one:
+#    build: ./consumer-one
+#    ports:
+#      - "9003:8080"
+#    depends_on:
+#      - kafka
+#  consumer-two:
+#    build: ./consumer-two
+#    ports:
+#      - "9004:8080"
+#    depends_on:
+#      - kafka
+#  consumer-three:
+#    build: ./consumer-three
+#    ports:
+#      - "9005:8080"
 
 
   zipkinserver:
